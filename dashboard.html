@@ -1,0 +1,130 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Socket.io Test</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.js"></script>
+  </head>
+  <body>
+    <script type="text/javascript">
+
+      window.addEventListener('load', eventWindowLoaded, false);
+
+      var socket = io.connect();
+      
+      socket.on('client_light', function(data){
+	console.log(data.val);
+        $('#light_val').text(data.val);
+
+        _lightY = data.val + 100;
+      });
+
+      $(document).ready(function(){
+        $('#text').keypress(function(e){
+          socket.emit('client_data', {'letter': String.fromCharCode(e.charCode)});
+        });
+      });
+
+      function eventWindowLoaded() {
+	canvasApp();	
+      }
+
+      function canvasApp()
+      {
+        console.log(window.innerWidth + " " + window.innerHeight);
+
+	light_canvas = document.getElementById('light_canvas');
+	light_canvas.height = window.innerHeight;
+	light_canvas.width = window.innerWidth;
+
+	kinect_canvas = document.getElementById('kinect_canvas');
+	kinect_canvas.height = window.innerHeight;
+	kinect_canvas.width = window.innerWidth;
+
+	FRAME_SIZE_W = window.innerWidth;
+	FRAME_SIZE_H = window.innerHeight;
+
+  	if (!light_canvas || !light_canvas.getContext ) {
+    		return;
+  	}
+  
+  	context = light_canvas.getContext('2d');
+	if (!context) {
+   	 	return;
+  	}
+
+	//context.strokeStyle = '#cfcfcf';
+	context.lineWidth = 1;
+
+        setInterval(run,intervalTime);
+
+        function run() {
+          //console.log("run");
+
+          render_light();
+
+          render_kinect();
+        }
+
+	function render_kinect() {
+
+	}
+
+        function render_light() {
+
+          context.beginPath();
+          context.moveTo(_lightX,_lastLightY);
+
+          _lightX += 2;
+          if (_lightX > SQUARE_SIZE) {
+            _lightX=0;
+          } else {
+
+             context.lineTo(_lightX, _lightY);
+          }
+
+          _lastLightY = _lightY;
+
+          context.stroke();
+        }
+      }
+
+      const FRAME_RATE = 40;
+      const SQUARE_SIZE = 400;
+
+      var FRAME_SIZE_W;
+      var FRAME_SIZE_H;
+
+      var intervalTime= 1000 / FRAME_RATE;
+
+      //light window
+      var _lightY = 0;
+      var _lastLightY = 0;
+
+      var _lightX = 0;
+
+    </script>
+
+    <style>
+       .square {
+         border-style: solid;
+         border-width: 3px;
+         border-color: #7f7f7f;
+         width: 400px;
+         height: 400px;
+       }
+    </style>
+
+    <div id="light" class="square">
+
+	<canvas id="light_canvas" width="400" height="400">
+	your browser does not support HTML 5 Canvas
+	</canvas>
+
+	<canvas id="kinect_canvas" width="400" height="400">
+	your browser does not support HTML 5 Canvas
+	</canvas>
+
+    </div>
+  </body>
+</html>
