@@ -1,27 +1,85 @@
 <!doctype html>
 <html>
   <head>
-    <title>Socket.io Test</title>
-    <script src="/socket.io/socket.io.js"></script>
+    <title>WATSON</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.js"></script>
-  </head>
-  <body>
     <script type="text/javascript">
 
-      window.addEventListener('load', eventWindowLoaded, false);
-
-      var socket = io.connect();
-      
-      socket.on('client_light', function(data){
-	console.log(data.val);
-        $('#light_val').text(data.val);
-
-        _lightY = data.val + 100;
-      });
+      //var api_pi = "/pi";
+      var api_all = "/all";
+      var alchemy_key = "f2cf1ce239a4ca6d75d8d17e9e78e94dae81c71b"
+		//"1f25fba09bbbc5c1f76627ce5dfd38cde8c32cf4";
 
       $(document).ready(function(){
-        $('#text').keypress(function(e){
-          socket.emit('client_data', {'letter': String.fromCharCode(e.charCode)});
+
+	console.log("here");
+
+        $("#submit_dashboard").click(function(e){
+
+		console.log( $("#u_name").val() );
+		console.log( $("#u_twitter").val() );
+		console.log( $("#u_samples").val() );
+
+		var u_name = $("#u_name").val();
+		var u_twitter = $("#u_twitter").val();
+		var u_samples = $("#u_samples").val();
+
+		//GET THE NEWS SUMMARY FOR THE NAME
+		var url_encoded_name = encodeURIComponent(u_name);
+		console.log("Name : " + u_name);
+		console.log("U Name : " + url_encoded_name);
+
+		var api_news = "https://access.alchemyapi.com/calls/data/GetNews?apikey=" + alchemy_key +  "&return=enriched.url.title,enriched.url.publicationDate,enriched.url.enrichedTitle.docSentiment&start=1428883200&end=1434150000&q.enriched.url.enrichedTitle.entities.entity=|text=" + url_encoded_name + ",type=person|&count=20&outputMode=json";
+
+		console.log(api_news);
+
+		var jqxhr = $.getJSON( api_news,
+		{
+		},  function() {
+
+  			console.log( "news summary success" );
+		})
+  		.done(function(data) {
+    			console.log( "news summary done" );
+
+			//WE ARE GETTING DAILY LIMIT ERRORS HERE
+			console.log(data);
+			var _out = "";
+			for (v in data.result.docs) {
+				_out += v.timestamp + " | ";
+				_out += v.source.enriched.url.enrichedTitle.docSentiment.type + " | ";
+				_out += v.source.enriched.url.enrichedTitle.docSentiment.score + " | ";
+				_out += "\n";
+			}
+
+			//console.log(String(data["result"]));
+
+			$("#results_news").attr("value", String(data.result.docs));
+
+  		})
+/*
+		//GET THE COMBINED PERSONALITY INDEX/KEYWORD BREAKOUT	
+		var jqxhr = $.getJSON( api_pi,
+		{
+			u_name: $("#u_name").val(),
+			u_twitter: $("#u_twitter").val(),
+			u_samples: $("#u_samples").val(),
+		},  function() {
+
+  			console.log( "success" );
+		})
+  		.done(function(data) {
+    			console.log( "second success" );
+			console.log(data);
+
+			$("#results_wc").attr("value", "");
+
+			$("#results_pi").attr("value", "");
+  		})
+  		.fail(function() {
+    			console.log( "error" );
+  		})
+*/
         });
       });
 
@@ -114,17 +172,44 @@
          height: 400px;
        }
     </style>
+  </head>
 
-    <div id="light" class="square">
+  <body>
 
-	<canvas id="light_canvas" width="400" height="400">
-	your browser does not support HTML 5 Canvas
-	</canvas>
+<form id="pi_form" action="pi" method="post">
 
-	<canvas id="kinect_canvas" width="400" height="400">
-	your browser does not support HTML 5 Canvas
-	</canvas>
+Name:<br>
+<input type="text" id="u_name" name="u_name"></input>
+<br><br>
 
-    </div>
+Twitter:<br>
+<input type="text" id="u_twitter" name="u_twitter"></input>
+<br><br>
+
+Links to Written Samples:<br>
+<textarea name="u_samples" id="u_samples" rows="5" cols="30"></textarea>
+<br>
+
+<div id="submit_dashboard">SUBMIT</submit>
+</form>
+
+<hr>
+
+<br><br>
+News results:
+<br>
+<textarea id="results_news" rows="5" cols="30"></textarea>
+<br><br>
+
+Word cloud results:
+<br>
+<textarea id="results_wc" rows="5" cols="30"></textarea>
+<br><br>
+
+Personality index results:
+<br>
+<textarea id="results_pi" rows="5" cols="30"></textarea>
+<br><br>
+
   </body>
 </html>
