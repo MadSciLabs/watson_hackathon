@@ -5,9 +5,11 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.js"></script>
     <script type="text/javascript">
 
-      //var api_pi = "/pi";
-      var api_all = "/all";
-      var alchemy_key = "f2cf1ce239a4ca6d75d8d17e9e78e94dae81c71b"
+      var api_pi = "/pi";
+      var api_wc = "/wordcloud";
+
+      //var alchemy_key = //"8117cdc2e7821aa6bcc3ed10393302b548ca9aa6";
+	var alchemy_key = "f2cf1ce239a4ca6d75d8d17e9e78e94dae81c71b"// - Adam's first key
 		//"1f25fba09bbbc5c1f76627ce5dfd38cde8c32cf4";
 
       $(document).ready(function(){
@@ -24,10 +26,11 @@
 		var u_twitter = $("#u_twitter").val();
 		var u_samples = $("#u_samples").val();
 
-		//GET THE NEWS SUMMARY FOR THE NAME
 		var url_encoded_name = encodeURIComponent(u_name);
 		console.log("Name : " + u_name);
 		console.log("U Name : " + url_encoded_name);
+
+		//GET THE NEWS SUMMARY FOR THE NAME
 
 		var api_news = "https://access.alchemyapi.com/calls/data/GetNews?apikey=" + alchemy_key +  "&return=enriched.url.title,enriched.url.publicationDate,enriched.url.enrichedTitle.docSentiment&start=1428883200&end=1434150000&q.enriched.url.enrichedTitle.entities.entity=|text=" + url_encoded_name + ",type=person|&count=20&outputMode=json";
 
@@ -45,19 +48,36 @@
 			//WE ARE GETTING DAILY LIMIT ERRORS HERE
 			console.log(data);
 			var _out = "";
-			for (v in data.result.docs) {
-				_out += v.timestamp + " | ";
+			var _init = false;
+			var _normalized_date = 0;
+	
+			console.log(data.result.docs.length);
+			for (var i=data.result.docs.length-1; i>=0; i--) {
+
+				v = data.result.docs[i];
+
+				if (_init == false) {
+					_normalized_date = v.timestamp;
+				}
+
+				_init = true;
+
+				//_out += (v.timestamp) + " | ";
+				_out += (v.timestamp - _normalized_date) + " | ";
 				_out += v.source.enriched.url.enrichedTitle.docSentiment.type + " | ";
 				_out += v.source.enriched.url.enrichedTitle.docSentiment.score + " | ";
+				_out += v.source.enriched.url.title + " | ";
 				_out += "\n";
 			}
 
-			//console.log(String(data["result"]));
+			console.log(_out);
 
-			$("#results_news").attr("value", String(data.result.docs));
+			$("#results_news").attr("value", _out);
 
   		})
-/*
+
+		_out = "";
+
 		//GET THE COMBINED PERSONALITY INDEX/KEYWORD BREAKOUT	
 		var jqxhr = $.getJSON( api_pi,
 		{
@@ -70,81 +90,59 @@
 		})
   		.done(function(data) {
     			console.log( "second success" );
-			console.log(data);
+			console.log(">");
 
-			$("#results_wc").attr("value", "");
+			console.log(data.tree.children[0].children[0].children.length);
 
-			$("#results_pi").attr("value", "");
+			for (var i=0; i<data.tree.children[0].children[0].children.length; i++)
+			{
+				v = data.tree.children[0].children[0].children[i];
+				console.log(v);
+
+				_out += v.name + "|" + v.percentage + "\n";
+			}
+			//$("#results_wc").attr("value", _out);
+
+			$("#results_pi").attr("value", _out);
   		})
   		.fail(function() {
     			console.log( "error" );
   		})
-*/
+
+
+                _out = "";
+
+                //GET THE WORDCLOUD
+                var jqxhr = $.getJSON( api_wc,
+                {
+                        u_twitter: $("#u_twitter").val(),
+                        u_samples: $("#u_samples").val(),
+                },  function() {
+
+                        console.log( "success" );
+                })
+                .done(function(data) {
+                        console.log(">");
+
+                        console.log(data.keywords.length);
+
+                        for (var i=0; i<data.keywords.length; i++)
+                        {
+                                v = data.keywords[i];
+                                console.log(v);
+
+                                _out += v.text + "|" + v.relevance + "|" + v.sentiment.type + "\n";
+                        }
+                        $("#results_wc").attr("value", _out);
+                })
+                .fail(function() {
+                        console.log( "error" );
+                })
+
         });
       });
 
       function eventWindowLoaded() {
-	canvasApp();	
-      }
-
-      function canvasApp()
-      {
-        console.log(window.innerWidth + " " + window.innerHeight);
-
-	light_canvas = document.getElementById('light_canvas');
-	light_canvas.height = window.innerHeight;
-	light_canvas.width = window.innerWidth;
-
-	kinect_canvas = document.getElementById('kinect_canvas');
-	kinect_canvas.height = window.innerHeight;
-	kinect_canvas.width = window.innerWidth;
-
-	FRAME_SIZE_W = window.innerWidth;
-	FRAME_SIZE_H = window.innerHeight;
-
-  	if (!light_canvas || !light_canvas.getContext ) {
-    		return;
-  	}
-  
-  	context = light_canvas.getContext('2d');
-	if (!context) {
-   	 	return;
-  	}
-
-	//context.strokeStyle = '#cfcfcf';
-	context.lineWidth = 1;
-
-        setInterval(run,intervalTime);
-
-        function run() {
-          //console.log("run");
-
-          render_light();
-
-          render_kinect();
-        }
-
-	function render_kinect() {
-
-	}
-
-        function render_light() {
-
-          context.beginPath();
-          context.moveTo(_lightX,_lastLightY);
-
-          _lightX += 2;
-          if (_lightX > SQUARE_SIZE) {
-            _lightX=0;
-          } else {
-
-             context.lineTo(_lightX, _lightY);
-          }
-
-          _lastLightY = _lightY;
-
-          context.stroke();
-        }
       }
 
       const FRAME_RATE = 40;
@@ -198,17 +196,17 @@ Links to Written Samples:<br>
 <br><br>
 News results:
 <br>
-<textarea id="results_news" rows="5" cols="30"></textarea>
+<textarea id="results_news" rows="5" cols="100"></textarea>
 <br><br>
 
 Word cloud results:
 <br>
-<textarea id="results_wc" rows="5" cols="30"></textarea>
+<textarea id="results_wc" rows="5" cols="100"></textarea>
 <br><br>
 
 Personality index results:
 <br>
-<textarea id="results_pi" rows="5" cols="30"></textarea>
+<textarea id="results_pi" rows="5" cols="100"></textarea>
 <br><br>
 
   </body>
