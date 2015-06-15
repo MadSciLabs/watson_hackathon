@@ -1,0 +1,69 @@
+.liquidFillGaugeText { font-family: Roboto; font-weight: bold; }
+        #fillgauge1 {
+                position: relative;
+                top: -100px;
+                left: 40%;
+                }
+        #fillgauge2 {
+                position: relative; 
+                top: 40px;
+                left: 0%;
+        }
+        #fillgauge3 { 
+            position: relative;
+                top: 40px;
+                left: 20%;
+        }
+        #fillgauge4 {
+            position: relative;
+                top: 220px;
+                left: -10%;
+
+        }   
+        #fillgauge5 {
+            position: relative;
+                top:60px;
+                left: 30%;
+        } 
+     /*   p {
+            font: 15px Helvetica, sans-serif;
+            }*/
+
+        /*openness*/
+
+        #labelOne { 
+                 position: relative;
+                top: 190px;
+                left: 26%;
+
+        } 
+        /*Conscientiousness*/ 
+
+        #labelTwo {
+                position: relative;
+                top: 15px;
+                left: 42%;
+
+        }
+        /*ExtraVersion*/
+
+        #labelThree {
+                position: relative;
+                top: 117px;
+                left: 66%;
+
+        }
+/*        Emotional Range
+*/        #labelFour {
+                position: relative;
+                top: 450px;
+                left: 33%;
+
+        } 
+        /*Agreeableness*/
+        #labelFive {
+                position: relative;
+                top: 415px;
+                left: 55%;
+
+        }

@@ -9,8 +9,9 @@
       var api_wc = "/wordcloud";
 
       //var alchemy_key = //"8117cdc2e7821aa6bcc3ed10393302b548ca9aa6";
-	var alchemy_key = "f2cf1ce239a4ca6d75d8d17e9e78e94dae81c71b"// - Adam's first key
+     var alchemy_key = "f2cf1ce239a4ca6d75d8d17e9e78e94dae81c71b"; // - Adam's first key
 		//"1f25fba09bbbc5c1f76627ce5dfd38cde8c32cf4";
+      //var alchemy_key = "478ac63cd4338d390bd5e1a56131efac89ebdb16"; //Charles Key
 
       $(document).ready(function(){
 
@@ -76,7 +77,7 @@
 
   		})
 
-		_out = "";
+		pi_out = "";
 
 		//GET THE COMBINED PERSONALITY INDEX/KEYWORD BREAKOUT	
 		var jqxhr = $.getJSON( api_pi,
@@ -99,18 +100,17 @@
 				v = data.tree.children[0].children[0].children[i];
 				console.log(v);
 
-				_out += v.name + "|" + v.percentage + "\n";
+				pi_out += v.name + "|" + v.percentage + "\n";
 			}
-			//$("#results_wc").attr("value", _out);
 
-			$("#results_pi").attr("value", _out);
+			$("#results_pi").attr("value", pi_out);
   		})
   		.fail(function() {
     			console.log( "error" );
   		})
 
 
-                _out = "";
+                wc_out = "";
 
                 //GET THE WORDCLOUD
                 var jqxhr = $.getJSON( api_wc,
@@ -131,9 +131,9 @@
                                 v = data.keywords[i];
                                 console.log(v);
 
-                                _out += v.text + "|" + v.relevance + "|" + v.sentiment.type + "\n";
+                                wc_out += v.text + "|" + v.relevance + "|" + v.sentiment.type + "\n";
                         }
-                        $("#results_wc").attr("value", _out);
+                        $("#results_wc").attr("value", wc_out);
                 })
                 .fail(function() {
                         console.log( "error" );

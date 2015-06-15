@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+  <html>
+    <head>
+      <!--Import materialize.css-->
+      <!--Import CustomD3Library.css-->
+
+      <link type="text/css" rel="stylesheet" href="css/materialize.css"  media="screen,projection"/>
+      <link type="text/css" rel="stylesheet" href="css/d3ExampleIBM.css"  media="screen,projection"/>
+
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.js"></script>
+
+    <script type="text/javascript">
+
+      var api_pi = "/pi";
+      var api_wc = "/wordcloud";
+
+	//var alchemy_key = "478ac63cd4338d390bd5e1a56131efac89ebdb16"; //Charles Key
+      //var alchemy_key = //"8117cdc2e7821aa6bcc3ed10393302b548ca9aa6";
+      var alchemy_key = "f2cf1ce239a4ca6d75d8d17e9e78e94dae81c71b";
+		// - Adam's first key
+                //"1f25fba09bbbc5c1f76627ce5dfd38cde8c32cf4";
+
+      $(document).ready(function(){
+
+        console.log("here");
+
+        $("#submit_dashboard").click(function(e){
+
+		$("#name_out").text($("#u_name").val());
+
+                console.log( $("#u_name").val() );
+                console.log( $("#u_twitter").val() );
+                console.log( $("#u_samples").val() );
+
+                var u_name = $("#u_name").val();
+                var u_twitter = $("#u_twitter").val();
+                var u_samples = $("#u_samples").val();
+
+                var url_encoded_name = encodeURIComponent(u_name);
+                console.log("Name : " + u_name);
+                console.log("U Name : " + url_encoded_name);
+
+                //GET THE NEWS SUMMARY FOR THE NAME
+
+                var api_news = "https://access.alchemyapi.com/calls/data/GetNews?apikey=" + alchemy_key +  "&return=enriched.url.title,enriched.url.publicationDate,enriched.url.enrichedTitle.docSentiment&start=1428883200&end=1434150000&q.enriched.url.enrichedTitle.entities.entity=|text=" + url_encoded_name + ",type=person|&count=20&outputMode=json";
+
+                console.log(api_news);
+
+                var jqxhr = $.getJSON( api_news,
+                {
+                },  function() {
+
+                        console.log( "news summary success" );
+                })
+                .done(function(data) {
+                        console.log( "news summary done" );
+
+                        //WE ARE GETTING DAILY LIMIT ERRORS HERE
+                        console.log(data);
+                        var _out = "";
+                        var _init = false;
+                        var _normalized_date = 0;
+
+			if (data.result.docs)
+			{
+                      console.log(data.result.docs.length);
+                        for (var i=data.result.docs.length-1; i>=0; i--) {
+
+                                v = data.result.docs[i];
+
+                                if (_init == false) {
+                                        _normalized_date = v.timestamp;
+                                }
+
+                                _init = true;
+
+                                //_out += (v.timestamp) + " | ";
+                                _out += (v.timestamp - _normalized_date) + " | ";
+                                _out += v.source.enriched.url.enrichedTitle.docSentiment.type + " | ";
+                                _out += v.source.enriched.url.enrichedTitle.docSentiment.score + " | ";
+                                _out += v.source.enriched.url.title + " | ";
+                                _out += "\n";
+                        }
+
+			}
+
+                        console.log(_out);
+
+                        $("#results_news").attr("value", _out);
+
+                })
+
+               pi_out = "";
+
+                //GET THE COMBINED PERSONALITY INDEX/KEYWORD BREAKOUT
+                var jqxhr = $.getJSON( api_pi,
+                {
+                        u_name: $("#u_name").val(),
+                        u_twitter: $("#u_twitter").val(),
+                        u_samples: $("#u_samples").val(),
+                },  function() {
+
+                        console.log( "success" );
+                })
+                .done(function(data) {
+                        console.log( "second success" );
+                        console.log(">");
+
+                        console.log(data.tree.children[0].children[0].children.length);
+
+                        v = data.tree.children[0].children[0].children[0];
+			loadLiquidFillGauge("fillgauge2", parseInt(100*v.percentage), config1);
+
+                        v = data.tree.children[0].children[0].children[1];
+			loadLiquidFillGauge("fillgauge1", parseInt(100*v.percentage), config5);
+
+                        v = data.tree.children[0].children[0].children[2];
+			loadLiquidFillGauge("fillgauge3", parseInt(100*v.percentage), config2);
+
+                        v = data.tree.children[0].children[0].children[3];
+			loadLiquidFillGauge("fillgauge4", parseInt(100*v.percentage), config3);
+
+                        v = data.tree.children[0].children[0].children[4];
+			loadLiquidFillGauge("fillgauge5", parseInt(100*v.percentage), config4);
+
+
+/*
+                        for (var i=0; i<data.tree.children[0].children[0].children.length; i++)
+                        {
+                                v = data.tree.children[0].children[0].children[i];
+                                console.log(v);
+
+                                pi_out += v.name + "|" + v.percentage + "\n";
+
+				loadLiquidFillGauge("fillgauge2", 20, config2);
+			}
+*/
+                })
+                .fail(function() {
+                        console.log( "error" );
+                })
+
+
+                wc_out = "";
+
+                //GET THE WORDCLOUD
+                var jqxhr = $.getJSON( api_wc,
+                {
+                        u_twitter: $("#u_twitter").val(),
+                        u_samples: $("#u_samples").val(),
+                },  function() {
+
+                        console.log( "success" );
+                })
+                .done(function(data) {
+                        console.log(">");
+
+                        console.log(data.keywords.length);
+
+                        for (var i=0; i<data.keywords.length; i++)
+                        {
+                                v = data.keywords[i];
+                                console.log(v);
+
+                                wc_out += v.text + "|" + v.relevance + "|" + v.sentiment.type + "\n";
+                        }
+                        $("#results_wc").attr("value", wc_out);
+                })
+                .fail(function() {
+                        console.log( "error" );
+                })
+
+        });
+      });
+
+      function eventWindowLoaded() {
+      }
+
+      const FRAME_RATE = 40;
+      const SQUARE_SIZE = 400;
+
+      var FRAME_SIZE_W;
+      var FRAME_SIZE_H;
+
+      var intervalTime= 1000 / FRAME_RATE;
+
+      //light window
+      var _lightY = 0;
+      var _lastLightY = 0;
+
+      var _lightX = 0;
+
+    </script>
+
+    <style>
+       .square {
+         border-style: solid;
+         border-width: 3px;
+         border-color: #7f7f7f;
+         width: 400px;
+         height: 400px;
+       }
+    </style>
+
+    </head>
+
+    <body>
+      <!--Import jQuery before materialize.js-->
+      <script src="https://code.jquery.com/jquery-2.1.1.min.js" language="Javascript"></script>
+      <script src="js/materialize.min.js" language="Javascript"></script>
+      <script src="http://d3js.org/d3.v3.min.js" language="JavaScript"></script>
+      <script src="js/liquidFillGauge.js" language="JavaScript"></script>
+
+      <!-- Grid begin -->
+      <div class="row">
+      	<div class="col l4">
+      		<div class="card blue-grey darken-1">
+            	<div class="card-content white-text">
+            <!-- Get image of Person -->
+            	    <img class="circle" src="chris-sacca_416x416.jpg" >
+			<!--import JSON Data to populate fields below-->
+			<!-- placeholders for variables -->
+	              	<h4 class="center-align" id="name_out">Chris Sacca</h4> 
+              		<p class="center-align">Net Worth: $1 Billion</p>
+              		<p class="center-align">Company: Some VC Fund</p>
+              		<p class="center-align">Industry: Venture Capital - Tech</p>
+              		<p class="center-align"><i class="mdi-maps-local-phone prefix"></i>555-555-5555</p>
+              		<p class="center-align"><i class="mdi-content-mail prefix"></i>chris@sacca.com</p>
+            	</div>
+            </div>
+        </div>
+
+      		<div class="col l8">
+      			<div class =>
+      				<button onclick="transition()">Update</button>
+      					<div class = "barGraph"></div>
+      			</div>
+      		</div>		
+      </div>
+
+      <script src="js/barGraph.js" language="JavaScript"></script>
+
+      <div class="row">
+      		<div class="col l4">
+      			<div class="wordCloud">Word Cloud</div>
+
+      <div class="row">
+      		<div class="row">
+
+       			<div class="input-field col s6">
+       			   <input id="u_name" type="text" class="validate">
+        		   <label for="first_name">Name</label>
+        		</div>
+<!--
+        		<div class="input-field col s6">
+         		   <input id="u_name_l" type="text" class="validate">
+          		   <label for="last_name">Last Name</label>
+       		    </div>
+-->
+      		</div>
+
+      	<div class="row">
+        	<div class=":q
+                
+                input-field col s12">
+         		<input id="u_twitter" type="text" class="validate">
+          		<label for="twitter">Twitter</label>
+        	</div>
+      	</div>
+
+      	<div class="row">
+        	<div class="input-field col s12">
+            	<input id="u_samples"  type="text" class="validate">
+            	<label for="blog">Content URLs (comma separated)</label>
+        	</div>
+      	</div>
+    		<button class="btn waves-effect waves-light" id="submit_dashboard">Submit
+    		<i class="mdi-content-send right"></i>
+  			</button>
+    	</form>
+  </div>
+
+      		</div>
+
+      			<div class="col l8">
+      				<p id="labelOne">Openness</p>
+					<p id="labelTwo">Conscientiousness</p>
+					<p id="labelThree">Extraversion</p>
+					<p id="labelFour">Emotional Range</p>
+					<p id="labelFive">Agreeableness</p>	
+					<svg id="fillgauge1" width="20%" height="150"></svg>
+					<svg id="fillgauge2" width="20%" height="150"></svg>
+					<svg id="fillgauge3" width="20%" height="150"></svg>
+					<svg id="fillgauge4" width="20%" height="150"></svg>
+					<svg id="fillgauge5" width="20%" height="150"></svg>
+      			</div>
+      	</div>
+      	<script src="js/d3Bubbles.js" language="JavaScript"></script>
+      
+
+    </body>
+  </html>

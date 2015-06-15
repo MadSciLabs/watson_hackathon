@@ -12,6 +12,8 @@ var express = require("express");
 var app = express();
 var bodyParser = require("body-parser");
 
+app.use(express.static('public'));
+
 //Create the AlchemyAPI object
 var AlchemyAPI = require('./alchemyapi');
 var alchemyapi = new AlchemyAPI();
@@ -94,6 +96,12 @@ app.use(bodyParser.urlencoded({extended: false}));
 app.get('/dashboard.html', function(req,res) {
 
 	res.sendfile("dashboard.html");
+
+});
+
+app.get('/new_dashboard.html', function(req,res) {
+
+	res.sendfile("IBMHackathon.html");
 
 });
 
